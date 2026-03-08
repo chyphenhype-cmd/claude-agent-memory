@@ -11,3 +11,17 @@ docs/
 
 # OS files
 .DS_Store
+
+# Pro tier files (paid — distributed via Gumroad)
+commands/
+memory/playbooks/
+skills/memory-capture/
+skills/product-lens/
+skills/new-project-playbook/
+scripts/system-health.sh
+scripts/snapshot-status.sh
+scripts/knowledge-compile.sh
+scripts/daily-pulse.sh
+scripts/weekly-digest.sh
+scripts/weekly-retro.sh
+install-pro.sh

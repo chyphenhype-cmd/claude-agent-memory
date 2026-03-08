@@ -44,18 +44,16 @@ SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
 # --- 3. Create directory structure ---
 
 echo "Creating directories..."
-mkdir -p "$INSTALL_DIR/memory/playbooks"
-mkdir -p "$INSTALL_DIR/scripts/status.d"
+mkdir -p "$INSTALL_DIR/memory"
+mkdir -p "$INSTALL_DIR/scripts"
 mkdir -p "$INSTALL_DIR/docs"
 mkdir -p "$INSTALL_DIR/logs"
 echo "  Done."
 
-# --- 4. Copy scripts ---
+# --- 4. Copy free-tier scripts ---
 
 echo "Installing scripts..."
-for script in _common.sh capture-all-projects.sh system-health.sh knowledge-compile.sh \
-              daily-pulse.sh weekly-retro.sh weekly-digest.sh snapshot-status.sh \
-              bootstrap-project.sh; do
+for script in _common.sh capture-all-projects.sh bootstrap-project.sh; do
     if [ -f "$SOURCE_DIR/scripts/$script" ]; then
         cp "$SOURCE_DIR/scripts/$script" "$INSTALL_DIR/scripts/$script"
         chmod +x "$INSTALL_DIR/scripts/$script"
@@ -63,16 +61,35 @@ for script in _common.sh capture-all-projects.sh system-health.sh knowledge-comp
 done
 echo "  Done."
 
-# --- 5. Copy playbooks ---
+# --- 5. Detect and install Pro scripts (if present) ---
 
-echo "Installing playbooks..."
-for playbook in "$SOURCE_DIR"/memory/playbooks/*.md; do
-    [ -f "$playbook" ] || continue
-    cp "$playbook" "$INSTALL_DIR/memory/playbooks/$(basename "$playbook")"
+PRO_DETECTED=false
+PRO_SCRIPTS=(system-health.sh knowledge-compile.sh daily-pulse.sh weekly-retro.sh weekly-digest.sh snapshot-status.sh)
+for script in "${PRO_SCRIPTS[@]}"; do
+    if [ -f "$SOURCE_DIR/scripts/$script" ]; then
+        PRO_DETECTED=true
+        cp "$SOURCE_DIR/scripts/$script" "$INSTALL_DIR/scripts/$script"
+        chmod +x "$INSTALL_DIR/scripts/$script"
+    fi
 done
-echo "  Done."
 
-# --- 6. Generate brain files from templates ---
+if $PRO_DETECTED; then
+    echo "  Pro scripts detected and installed."
+fi
+
+# --- 6. Detect and install Pro playbooks (if present) ---
+
+if [ -d "$SOURCE_DIR/memory/playbooks" ] && ls "$SOURCE_DIR"/memory/playbooks/*.md &>/dev/null; then
+    echo "Installing playbooks..."
+    mkdir -p "$INSTALL_DIR/memory/playbooks"
+    for playbook in "$SOURCE_DIR"/memory/playbooks/*.md; do
+        [ -f "$playbook" ] || continue
+        cp "$playbook" "$INSTALL_DIR/memory/playbooks/$(basename "$playbook")"
+    done
+    echo "  Pro playbooks installed."
+fi
+
+# --- 7. Generate brain files from templates ---
 
 DATE=$(date '+%Y-%m-%d')
 
@@ -107,7 +124,7 @@ fi
 
 echo "  Done."
 
-# --- 7. Generate CLAUDE.md ---
+# --- 8. Generate CLAUDE.md ---
 
 if [ ! -f "$INSTALL_DIR/CLAUDE.md" ]; then
     echo "Generating CLAUDE.md..."
@@ -117,7 +134,7 @@ else
     echo "  CLAUDE.md already exists, skipping."
 fi
 
-# --- 8. Create projects.conf ---
+# --- 9. Create projects.conf ---
 
 if [ ! -f "$INSTALL_DIR/projects.conf" ]; then
     echo "Creating projects.conf..."
@@ -127,7 +144,7 @@ else
     echo "  projects.conf already exists, skipping."
 fi
 
-# --- 9. Set up Claude Code global settings ---
+# --- 10. Set up Claude Code global settings ---
 
 CLAUDE_DIR="$HOME/.claude"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
@@ -189,27 +206,34 @@ else
     fi
 fi
 
-# --- 10. Install skills ---
+# --- 11. Install self-improve skill ---
 
 SKILLS_DIR="$CLAUDE_DIR/skills"
 echo "Installing skills..."
 
-for skill_dir in "$SOURCE_DIR"/skills/*/; do
-    [ -d "$skill_dir" ] || continue
-    skill_name=$(basename "$skill_dir")
-    target="$SKILLS_DIR/$skill_name"
-    mkdir -p "$target"
-    cp "$skill_dir/SKILL.md" "$target/SKILL.md" 2>/dev/null || true
-    echo "  Installed skill: $skill_name"
+# Always install self-improve (free tier)
+if [ -d "$SOURCE_DIR/skills/self-improve" ]; then
+    mkdir -p "$SKILLS_DIR/self-improve"
+    cp "$SOURCE_DIR/skills/self-improve/SKILL.md" "$SKILLS_DIR/self-improve/SKILL.md"
+    echo "  Installed skill: self-improve"
+fi
+
+# Install Pro skills if present
+for skill_name in memory-capture product-lens new-project-playbook; do
+    if [ -d "$SOURCE_DIR/skills/$skill_name" ]; then
+        mkdir -p "$SKILLS_DIR/$skill_name"
+        cp "$SOURCE_DIR/skills/$skill_name/SKILL.md" "$SKILLS_DIR/$skill_name/SKILL.md"
+        echo "  Installed Pro skill: $skill_name"
+    fi
 done
 
 echo "  Done."
 
-# --- 11. Install slash commands ---
+# --- 12. Install Pro slash commands (if present) ---
 
 COMMANDS_DIR="$CLAUDE_DIR/commands"
-if [ -d "$SOURCE_DIR/commands" ]; then
-    echo "Installing slash commands..."
+if [ -d "$SOURCE_DIR/commands" ] && ls "$SOURCE_DIR"/commands/*.md &>/dev/null; then
+    echo "Installing Pro slash commands..."
     mkdir -p "$COMMANDS_DIR"
     for cmd in "$SOURCE_DIR"/commands/*.md; do
         [ -f "$cmd" ] || continue
@@ -219,7 +243,7 @@ if [ -d "$SOURCE_DIR/commands" ]; then
     echo "  Done."
 fi
 
-# --- 12. Initialize git repo ---
+# --- 13. Initialize git repo ---
 
 if [ ! -d "$INSTALL_DIR/.git" ]; then
     echo "Initializing git repository..."
@@ -261,10 +285,12 @@ echo ""
 echo "  3. Open Claude Code in your project and start working."
 echo "     The Stop hook will auto-capture context when sessions end."
 echo ""
-echo "  4. Next morning, run the briefing:"
-echo "     cd $INSTALL_DIR && claude"
-echo "     Then type: /project:briefing"
-echo ""
-echo "  5. Run a health check anytime:"
-echo "     bash $INSTALL_DIR/scripts/system-health.sh"
-echo ""
+
+if ! $PRO_DETECTED; then
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Want playbooks, slash commands, and"
+    echo "  automation scripts? Get Agent Hub Pro:"
+    echo "  [GUMROAD_LINK]"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+fi

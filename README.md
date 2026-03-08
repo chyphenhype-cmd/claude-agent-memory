@@ -55,10 +55,10 @@ bash setup.sh
 
 The installer asks your name and install directory (default: `~/agent`), then:
 
-1. Creates the directory structure and copies all scripts
+1. Creates the directory structure and copies scripts
 2. Generates brain files from templates (user profile, session bridge, learnings)
 3. Installs a `CLAUDE.md` that configures Claude as a co-founder
-4. Installs 4 skills and 4 slash commands into `~/.claude/`
+4. Installs the self-improve skill into `~/.claude/`
 5. Configures a Stop hook that auto-captures context when sessions end
 6. Initializes a git repo to track your memory over time
 
@@ -76,46 +76,20 @@ Takes about 60 seconds. No dependencies beyond bash and git.
 | `memory/session-bridge.md` | What happened last session, what's active, what's next. The #1 file for continuity. |
 | `memory/learnings.md` | Cross-project patterns and anti-patterns. Capped at ~35, pruned quarterly. |
 
-### Skills (reactive intelligence)
+### Self-improve skill (reactive intelligence)
 
 | Skill | Trigger |
 |-------|---------|
 | `self-improve` | Fires after corrections, mistakes, feedback. Captures the pattern, not just the fix. |
-| `memory-capture` | Fires after decisions, insights, milestones. Routes knowledge to the right file. |
-| `product-lens` | Activates during feature design. Thinks from the user's perspective. |
-| `new-project-playbook` | Guides tech stack, scaffolding, and architecture for new projects. |
 
-### Slash commands (on-demand tools)
+The self-improvement pipeline is what separates Agent Hub from a static CLAUDE.md. Correct Claude once → pattern captured. Same mistake twice → hard rule. Three times → enforced across every project.
 
-| Command | What it does |
-|---------|--------------|
-| `/briefing` | Morning briefing — project status, what changed, what needs attention. |
-| `/digest` | Extracts patterns from recent work across all projects into learnings. |
-| `/retro` | Audits the learning pipeline — stale patterns, missing validations, promotion candidates. |
-| `/health` | Runs system health check — file integrity, wiring, learning pipeline status. |
-
-### Playbooks (production-tested code patterns)
-
-Five playbooks extracted from real production systems. Each contains working code, not abstract advice:
-
-- **API Resilience** — Circuit breakers, retry with exponential backoff, rate limit pacing, CLI fallback
-- **SQLite Patterns** — WAL mode, JSON columns, upserts, migrations, N+1 prevention, cross-source dedup
-- **React Frontend** — React Query integration, SSE streams, optimistic updates, command palette
-- **Testing** — Offline scraper testing, optional imports, event bus testing, pure function extraction
-- **Web Scraping** — Anti-bot layering, DOM vs API interception, enrichment preservation
-
-### Automation scripts
+### Automation
 
 | Script | Purpose |
 |--------|---------|
-| `bootstrap-project.sh` | Wires a project into the brain (adds @imports, pattern tracker, docs scaffolding, hooks) |
-| `system-health.sh` | Validates file integrity, wiring, learning pipeline, script syntax |
-| `snapshot-status.sh` | Generates verified project status from git/filesystem (no stale data) |
-| `knowledge-compile.sh` | Compiles intelligence briefing from all projects |
-| `daily-pulse.sh` | Daily activity snapshot across all projects |
-| `weekly-digest.sh` | Extracts cross-project learnings from the week |
-| `weekly-retro.sh` | Audits the learning pipeline for staleness |
 | `capture-all-projects.sh` | Auto-captures context on session end (used by Stop hook) |
+| `bootstrap-project.sh` | Wires a project into the brain (adds @imports, pattern tracker, docs scaffolding) |
 
 ---
 
@@ -128,8 +102,7 @@ Five playbooks extracted from real production systems. Each contains working cod
     user-profile.md               <-- Your identity, preferences, working style
     session-bridge.md             <-- Recent sessions, active work, open questions
     learnings.md                  <-- Cross-project patterns (35 max, tiered)
-    playbooks/                    <-- Deep reference implementations
-  scripts/                        <-- Automation (health, status, compile, bootstrap)
+  scripts/                        <-- Automation (capture, bootstrap)
   projects.conf                   <-- Registry of all connected projects
 
 ~/your-project/
@@ -138,8 +111,7 @@ Five playbooks extracted from real production systems. Each contains working cod
   docs/evolution.md               <-- Project narrative (what was built and why)
 
 ~/.claude/
-  skills/                         <-- Self-improve, memory-capture, product-lens
-  commands/                       <-- /briefing, /digest, /retro, /health
+  skills/self-improve/            <-- Captures mistakes as patterns automatically
   settings.json                   <-- Stop hook for auto-capture
 ```
 
@@ -160,11 +132,9 @@ bash ~/agent/scripts/bootstrap-project.sh ~/your-project
 
 The script:
 1. Appends `@import` directives to your project's `CLAUDE.md` (pointing to the brain)
-2. Asks what kind of project (web app, scraper, CLI, bot) and adds relevant playbook imports
-3. Registers the project in the hub's `CLAUDE.md` and `projects.conf`
-4. Creates a pattern tracker at `~/.claude/projects/.../memory/patterns.md`
-5. Scaffolds `docs/decisions.md` and `docs/evolution.md` if they don't exist
-6. Creates `.claude/settings.local.json` with safety hooks (blocks destructive commands, auto-lints on save)
+2. Registers the project in the hub's `CLAUDE.md` and `projects.conf`
+3. Creates a pattern tracker at `~/.claude/projects/.../memory/patterns.md`
+4. Scaffolds `docs/decisions.md` and `docs/evolution.md` if they don't exist
 
 Your project needs a `CLAUDE.md` file before bootstrapping. If you don't have one, create a basic one describing the project.
 
@@ -175,10 +145,9 @@ Your project needs a `CLAUDE.md` file before bootstrapping. If you don't have on
 **Morning:**
 ```
 cd ~/agent && claude
-> /briefing
 ```
 
-Claude reads all project status, recent sessions, and overnight activity. Gives you a briefing: what changed, what's blocked, what to work on.
+Claude reads session bridge, checks recent git activity across your projects. You pick up where you left off.
 
 **During work:**
 
@@ -188,33 +157,39 @@ Just build. Claude remembers your patterns, your architecture decisions, your pr
 
 The Stop hook fires automatically and captures session context. For significant sessions, Claude also updates the session bridge with what was done and what's next.
 
-**Weekly:**
-```
-> /digest
-> /retro
-```
-
-`/digest` pulls patterns from the week's work across all projects and promotes recurring ones to global learnings. `/retro` audits the pipeline — flags stale patterns, suggests promotions, identifies gaps.
-
 ---
 
-## Commands reference
+## Agent Hub Pro
 
-### /briefing
+The free version gives you persistent memory and self-improvement — the core loop that makes Claude actually useful across sessions.
 
-Generates project status from git and filesystem (not stale docs), compiles intelligence from all projects, and presents a briefing: recent sessions, active work, blockers, and recommendations.
+**Pro adds the power features that make the system compound:**
 
-### /digest
+- **3 additional skills** — memory-capture (proactive knowledge routing), product-lens (user + business perspective on every feature), new-project-playbook (tech stack + scaffolding guides)
+- **4 slash commands** — `/briefing` (morning project status), `/digest` (cross-project pattern extraction), `/retro` (learning pipeline audit), `/health` (system integrity check)
+- **5 playbooks** — Production-tested code patterns extracted from real projects: API resilience (circuit breakers, retry, rate limiting), SQLite (WAL, JSON columns, upserts, N+1 prevention), React frontend (React Query, SSE, optimistic updates), testing (offline scraper testing, event bus testing), web scraping (anti-bot, DOM vs API interception)
+- **6 automation scripts** — System health check, project status snapshots, intelligence compiler, daily pulse, weekly digest, weekly retrospective
+- **Customization Guide** — 2,500+ words on getting 10x more out of the system: writing effective profiles, session bridge practices, useful learnings vs noise, common mistakes
+- **Email support** — Direct help getting set up
 
-Reads autopilot logs, recent commits, and pattern trackers across all projects. Extracts new patterns, validates existing ones against evidence, and promotes recurring patterns to `learnings.md`.
+### Free vs Pro
 
-### /retro
+| | Free | Pro ($49) |
+|---|---|---|
+| Brain files (profile, session bridge, learnings) | ✓ | ✓ |
+| Self-improve skill | ✓ | ✓ |
+| Stop hook + capture script | ✓ | ✓ |
+| Bootstrap script | ✓ | ✓ |
+| 3 additional skills | — | ✓ |
+| 4 slash commands | — | ✓ |
+| 5 production playbooks | — | ✓ |
+| 6 automation scripts | — | ✓ |
+| Customization Guide | — | ✓ |
+| Email support | — | ✓ |
 
-Audits the learning pipeline: which patterns are stale (not validated recently), which should be promoted to higher tiers, which should be pruned. Keeps the knowledge base healthy.
+**Get Pro:** [GUMROAD_LINK]
 
-### /health
-
-Runs `system-health.sh` and interprets results. Checks: brain file existence, project wiring (@imports present), script syntax, learning pipeline state, doc staleness.
+Pro buyers: download the zip, run `bash install-pro.sh` inside your existing Agent Hub installation.
 
 ---
 
@@ -222,11 +197,11 @@ Runs `system-health.sh` and interprets results. Checks: brain file existence, pr
 
 **Do I need to use all of this?**
 
-No. The core value comes from three files: `user-profile.md`, `session-bridge.md`, and `learnings.md`. The skills, commands, and automation scripts compound the value over time but aren't required on day one. Start with the brain files, add the rest as you feel the need.
+No. The core value comes from three files: `user-profile.md`, `session-bridge.md`, and `learnings.md`. The self-improve skill makes it compound automatically. Start there — it's everything you need.
 
 **Does this work with any project / language?**
 
-Yes. The brain files and memory system are language-agnostic. The playbooks contain language-specific code (JavaScript, Python) but they're reference material, not dependencies. The bootstrap script detects your project language and wires up appropriate playbooks.
+Yes. The brain files and memory system are language-agnostic. The playbooks (Pro) contain language-specific code (JavaScript, Python) but they're reference material, not dependencies.
 
 **How is this different from just putting instructions in CLAUDE.md?**
 
@@ -235,6 +210,10 @@ A single CLAUDE.md is project-local and static. Agent Hub gives you cross-projec
 **Will this slow down Claude Code?**
 
 The brain files total a few hundred lines. Claude Code loads them as context alongside your project's CLAUDE.md. The overhead is minimal and the context is highly relevant -- Claude spends less time asking questions and more time building.
+
+**Does this work with Claude Pro / Team / API?**
+
+Agent Hub works with Claude Code on any plan — Pro, Team, or Enterprise. It uses CLAUDE.md files and the Claude Code skill/command system, so it works regardless of how you're authenticated.
 
 ---
 
@@ -253,5 +232,3 @@ MIT
 ---
 
 Built by extracting the intelligence system from 4 production projects and 400+ commits. This is not a template someone imagined would be useful -- it's the system that actually runs.
-
-[GUMROAD_LINK]
