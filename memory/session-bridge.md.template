@@ -1,0 +1,29 @@
+# Session Bridge
+
+Read at the start of every session. Updated at end of significant work.
+Last updated: {{DATE}}
+
+---
+
+## Recent Sessions
+<!-- Log every session. Date, project, what we did, decisions made, what's next. -->
+<!-- Most recent first. Keep ~10 sessions, archive older ones. -->
+<!-- This is the #1 thing that makes the next session smarter. -->
+
+---
+
+## Active Work
+
+### [Project Name] — Current Focus
+- **Status**: [What phase? What's done? What's next?]
+- **Blockers**: [Anything stuck?]
+
+---
+
+## Open Questions
+- [Questions that need answering across sessions]
+
+## Ideas Brewing
+- [Ideas worth tracking but not ready to build]
+<!-- AUTO-CAPTURE START -->
+<!-- AUTO-CAPTURE END -->

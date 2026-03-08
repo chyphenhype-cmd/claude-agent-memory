@@ -1,0 +1,12 @@
+# Agent Hub — Project Registry
+# Format: path:DisplayName
+# One project per line. Comments and blank lines are ignored.
+# The path must be absolute or start with ~ (which expands to $HOME).
+#
+# Add your projects here after running setup.sh.
+# Then run: bootstrap-project.sh <path> to wire each one into the brain.
+#
+# Examples:
+#   ~/my-saas:MySaaS
+#   ~/side-project:SideProject
+#   ~/client-work/acme:AcmeApp

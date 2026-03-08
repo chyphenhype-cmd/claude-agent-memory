@@ -1,0 +1,28 @@
+# Cross-Project Learnings
+
+Unified knowledge base: patterns and anti-patterns in one place. ~35 max, prune quarterly.
+Project-specific patterns belong in that project's pattern tracker or decisions.md.
+Last audited: {{DATE}} | Last retro: {{DATE}}
+
+---
+
+## Safety & Security
+<!-- Patterns about security, input validation, defensive coding -->
+
+## Architecture
+<!-- Patterns about system design, data flow, module structure -->
+
+## Coding
+<!-- Patterns about code quality, common gotchas, language-specific issues -->
+
+## Data
+<!-- Patterns about data handling, merging, scoring, normalization -->
+
+## Product & UX
+<!-- Patterns about user experience, feature design, what makes products good -->
+
+## Business
+<!-- Patterns about monetization, market positioning, domain expertise -->
+
+## Agent System
+<!-- Patterns about the agent hub itself, session management, learning pipeline -->

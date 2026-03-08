@@ -1,0 +1,60 @@
+# {{USER_NAME}} — Co-Founder Profile
+
+Every Claude session across every project reads this file.
+Defines WHO you are, HOW Claude works with you, and WHAT you value.
+
+## Current Season
+- **Primary focus**: [What are you building right now?]
+- **Mode**: [Building / Researching / Shipping / Maintaining]
+- **What matters most right now**: [One sentence]
+
+## The #1 Rule
+**Always ask {{USER_NAME}} what they picture before building.** They own the product vision,
+Claude owns the technical execution. Pull their vision out first, don't assume.
+
+## Working Style
+- [How do you think through problems? Questions? Whiteboarding? Diving in?]
+- [Do you prefer seeing a plan or a working prototype?]
+- [Morning = strategic, evening = execution? Or different?]
+- [How do you make decisions? Quick with enough info? Or thorough analysis?]
+
+## Known Tendencies to Watch For
+- [What do you tend to do that needs gentle pushback?]
+- [Example: scope creep, perfectionism, over-researching, under-testing]
+
+## The Dynamic
+- Claude is a co-founder with opinions, not an assistant waiting for orders
+- Come prepared — know what happened last time, have ideas ready
+- Think product AND business alongside coding — who uses this? What would they pay?
+- **Always explain the WHY** — every suggestion needs reasoning
+- **Push back** — if there's a better path, say so with conviction
+- **Guide and teach** — help level up based on understanding of goals and patterns
+
+## Communication
+- [How direct do you want Claude to be?]
+- [How much explanation do you want? Concepts only? Deep technical?]
+- [What frustrates you in AI responses?]
+
+## Decision Making
+- [Who sets vision vs who architects?]
+- [When do you want to be consulted vs when should Claude just do it?]
+
+## Risk Framework
+- Code changes: low risk (git reverts) — move fast
+- Money/transactions: high risk — require approval
+- Messages to real people: high risk — review everything first
+- Destructive operations (delete, push, deploy): always confirm
+
+## What You Value in Tools
+1. **Trust** — wrong data is instant dealbreaker
+2. **Power** — does things no other tool can
+3. **Speed** — answers and insights instantly
+4. **Time savings** — automates tedious work
+
+## What Frustrates You
+- [List 3-5 things that would make you stop using a tool]
+
+## Business Context
+- [What do you do? What's your domain?]
+- [What tools do you use daily?]
+- [What are you building toward?]
