@@ -26,3 +26,6 @@ Last audited: {{DATE}} | Last retro: {{DATE}}
 
 ## Agent System
 <!-- Patterns about the agent hub itself, session management, learning pipeline -->
+
+BAIL_AND_REPLAN (YYYY-MM): When an approach fails 2+ times consecutively on the same problem, STOP and re-plan. Step back, diagnose the root cause, try a fundamentally different approach. Thrashing wastes cycles and compounds the mess.
+- Confidence: High | Validated: YYYY-MM-DD | Source: [describe where you observed this]

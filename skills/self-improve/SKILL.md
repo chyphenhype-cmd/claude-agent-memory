@@ -21,6 +21,7 @@ description: >
 - the user pushes back on a recommendation (capture WHY he disagreed)
 - A fix that reverts a previous fix (regression indicator — needs a rule)
 - An approach was tried and abandoned (anti-pattern — capture why it failed)
+- After implementing a non-trivial fix, pause and self-check: "knowing everything I know now, is there a more elegant way?" (DEMAND_ELEGANCE checkpoint — skip for simple/obvious fixes)
 
 ### Application Events (a learning was used)
 - You read learnings.md and one of the entries influenced your decision

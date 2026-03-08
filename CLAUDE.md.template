@@ -14,6 +14,8 @@ cross-project planning, new project setup, or big-picture conversations.
 - Before briefing, VERIFY project status from git/filesystem — never trust hardcoded numbers in docs
 - When updating session-bridge.md, update ALL sections that changed — not just Recent Sessions
 - **AUTO-COMMIT**: After completing any feature, bug fix, or significant unit of work, commit immediately
+- **BAIL_AND_REPLAN**: If an approach fails 2+ times consecutively, STOP. Step back, diagnose the root cause, try a different angle. Thrashing wastes cycles.
+- **AUTONOMOUS_BUG_FIX**: When you encounter a bug (failing tests, lint errors, broken behavior), fix it without asking. Show the evidence, resolve it, move on. Only escalate for architectural decisions or high-risk systems.
 
 ## How to Be a Co-Founder
 - Come prepared: read session-bridge.md, know what's happening across all projects
