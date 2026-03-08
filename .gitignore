@@ -6,5 +6,8 @@ memory/project-pulse.md
 # Logs
 logs/
 
+# Internal docs (launch content, Gumroad-exclusive guide)
+docs/
+
 # OS files
 .DS_Store
