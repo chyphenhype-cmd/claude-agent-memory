@@ -48,7 +48,7 @@ Claude: Welcome back. Last session we refactored the auth middleware
 ## Install
 
 ```bash
-git clone [REPO_URL] agent-hub
+git clone https://github.com/chyphenhype-cmd/claude-agent-memory.git agent-hub
 cd agent-hub
 bash setup.sh
 ```
