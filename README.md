@@ -187,7 +187,7 @@ The free version gives you persistent memory and self-improvement — the core l
 | Customization Guide | — | ✓ |
 | Email support | — | ✓ |
 
-**Get Pro:** [GUMROAD_LINK]
+**Get Pro:** https://chyphenhype.gumroad.com/l/vmewkp
 
 Pro buyers: download the zip, run `bash install-pro.sh` inside your existing Agent Hub installation.
 

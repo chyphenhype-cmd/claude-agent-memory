@@ -290,7 +290,7 @@ if ! $PRO_DETECTED; then
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "  Want playbooks, slash commands, and"
     echo "  automation scripts? Get Agent Hub Pro:"
-    echo "  [GUMROAD_LINK]"
+    echo "  https://chyphenhype.gumroad.com/l/vmewkp"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 fi
