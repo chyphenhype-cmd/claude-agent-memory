@@ -8,6 +8,8 @@
 # Jobs:
 #   1. Snapshot ALL projects (commits, patterns, activity)
 #   2. Detail the CURRENT project's recent commits
+#   2b. Capture session history for the current project (marker-based)
+#   2c. Auto-generate session log entry in session-bridge.md
 #   3. Update session-bridge.md AUTO-CAPTURE block
 #   4. Output session-end reminder
 #############################################
@@ -102,6 +104,134 @@ if [ -d "$PROJECT_DIR/.git" ]; then
 $KEY_COMMITS
 -->"
         fi
+    fi
+fi
+
+# --- 2b. Session history capture for current project (marker-based) ---
+# Uses .last-session-commit marker to find new commits since last capture.
+
+MARKER_FILE="$PROJECT_DIR/.last-session-commit"
+SESSION_COMMITS=""
+SH_FEAT_COUNT=0
+SH_FIX_COUNT=0
+SH_REFACTOR_COUNT=0
+
+if [ -d "$PROJECT_DIR/.git" ]; then
+    if [ -f "$MARKER_FILE" ]; then
+        LAST_SHA=$(cat "$MARKER_FILE")
+        if git -C "$PROJECT_DIR" cat-file -t "$LAST_SHA" >/dev/null 2>&1; then
+            SESSION_COMMITS=$(git -C "$PROJECT_DIR" log "$LAST_SHA..HEAD" --oneline --no-merges 2>/dev/null)
+        else
+            SESSION_COMMITS=$(git -C "$PROJECT_DIR" log --since="2 hours ago" --oneline --no-merges 2>/dev/null)
+        fi
+    else
+        SESSION_COMMITS=$(git -C "$PROJECT_DIR" log --since="2 hours ago" --oneline --no-merges 2>/dev/null)
+    fi
+
+    if [ -n "$SESSION_COMMITS" ]; then
+        SESSION_COMMIT_COUNT=$(echo "$SESSION_COMMITS" | wc -l | tr -d ' ')
+
+        # Categorize by conventional commit type
+        SH_FEAT_COUNT=$(echo "$SESSION_COMMITS" | grep -cE '^[a-f0-9]+ feat' || true)
+        SH_FIX_COUNT=$(echo "$SESSION_COMMITS" | grep -cE '^[a-f0-9]+ fix' || true)
+        SH_TEST_COUNT=$(echo "$SESSION_COMMITS" | grep -cE '^[a-f0-9]+ test' || true)
+        SH_REFACTOR_COUNT=$(echo "$SESSION_COMMITS" | grep -cE '^[a-f0-9]+ refactor' || true)
+        SH_CHORE_COUNT=$(echo "$SESSION_COMMITS" | grep -cE '^[a-f0-9]+ chore' || true)
+
+        # Build category summary
+        SH_CATEGORIES=""
+        [ "$SH_FEAT_COUNT" -gt 0 ] && SH_CATEGORIES="${SH_CATEGORIES}${SH_FEAT_COUNT} feat, "
+        [ "$SH_FIX_COUNT" -gt 0 ] && SH_CATEGORIES="${SH_CATEGORIES}${SH_FIX_COUNT} fix, "
+        [ "$SH_TEST_COUNT" -gt 0 ] && SH_CATEGORIES="${SH_CATEGORIES}${SH_TEST_COUNT} test, "
+        [ "$SH_REFACTOR_COUNT" -gt 0 ] && SH_CATEGORIES="${SH_CATEGORIES}${SH_REFACTOR_COUNT} refactor, "
+        [ "$SH_CHORE_COUNT" -gt 0 ] && SH_CATEGORIES="${SH_CATEGORIES}${SH_CHORE_COUNT} chore, "
+        SH_CATEGORIES=${SH_CATEGORIES%, }
+
+        # Get meaningful commit subjects (skip chore noise)
+        SH_SUBJECTS=$(echo "$SESSION_COMMITS" | grep -E '^[a-f0-9]+ (feat|fix|test|refactor)' | sed 's/^[a-f0-9]* /  - /' | head -10)
+
+        # Append to project's session-history.md (only if the file exists)
+        SESSION_HISTORY="$PROJECT_DIR/docs/session-history.md"
+        if [ -f "$SESSION_HISTORY" ]; then
+            {
+                echo ""
+                echo "[$DATE_SHORT] SESSION: $SESSION_COMMIT_COUNT commits ($SH_CATEGORIES)"
+                if [ -n "$SH_SUBJECTS" ]; then
+                    echo "$SH_SUBJECTS"
+                fi
+            } >> "$SESSION_HISTORY"
+        fi
+    fi
+
+    # Update marker to current HEAD
+    git -C "$PROJECT_DIR" rev-parse HEAD > "$MARKER_FILE" 2>/dev/null
+fi
+
+# --- 2c. Auto-generate session log entry in session-bridge.md ---
+# Only when feat/fix/refactor commits exist (skip all-chore sessions).
+# These are the safety net for when manual Recent Sessions entries are skipped.
+
+HAS_MEANINGFUL=$((SH_FEAT_COUNT + SH_FIX_COUNT + SH_REFACTOR_COUNT))
+
+if [ -n "$SESSION_COMMITS" ] && [ "$HAS_MEANINGFUL" -gt 0 ] 2>/dev/null; then
+    # Build summary line: "N features, M fixes: Subject1, Subject2, ..."
+    AUTO_BREAKDOWN=""
+    [ "$SH_FEAT_COUNT" -gt 0 ] && AUTO_BREAKDOWN="${AUTO_BREAKDOWN}${SH_FEAT_COUNT} features, "
+    [ "$SH_FIX_COUNT" -gt 0 ] && AUTO_BREAKDOWN="${AUTO_BREAKDOWN}${SH_FIX_COUNT} fixes, "
+    [ "$SH_REFACTOR_COUNT" -gt 0 ] && AUTO_BREAKDOWN="${AUTO_BREAKDOWN}${SH_REFACTOR_COUNT} refactors, "
+    AUTO_BREAKDOWN=${AUTO_BREAKDOWN%, }
+
+    # Map project dir to display name
+    AUTO_PROJECT_NAME="$PROJECT_NAME"
+    for SPEC in "${PROJECTS[@]}"; do
+        P_DIR="${SPEC%%:*}"
+        P_NAME="${SPEC#*:}"
+        if [ "$P_DIR" = "$PROJECT_DIR" ]; then
+            AUTO_PROJECT_NAME="$P_NAME"
+            break
+        fi
+    done
+
+    # Get feat/fix/refactor commit subjects, strip prefix, cap at 5
+    AUTO_SUBJECTS=$(echo "$SESSION_COMMITS" | grep -E '^[a-f0-9]+ (feat|fix|refactor):' | \
+        sed 's/^[a-f0-9]* [a-z]*: //' | head -5 | paste -sd ',' - | sed 's/,/, /g')
+
+    AUTO_ENTRY="[${DATE} auto] **${AUTO_PROJECT_NAME}** — ${AUTO_BREAKDOWN}: ${AUTO_SUBJECTS}."
+
+    # Insert into AUTO-SESSION-LOG block (most recent first, after the START comment)
+    if grep -q '<!-- AUTO-SESSION-LOG START -->' "$BRIDGE_FILE" 2>/dev/null; then
+        # Extract existing entries (lines starting with [ between START and END)
+        EXISTING_ENTRIES=$(sed -n '/<!-- AUTO-SESSION-LOG START -->/,/<!-- AUTO-SESSION-LOG END -->/p' "$BRIDGE_FILE" | \
+            grep '^\[' || true)
+
+        # Remove the old AUTO-SESSION-LOG block
+        sed -i '' '/<!-- AUTO-SESSION-LOG START -->/,/<!-- AUTO-SESSION-LOG END -->/d' "$BRIDGE_FILE"
+
+        # Build new block in temp file
+        TMPBLOCK=$(mktemp)
+        {
+            echo ""
+            echo "<!-- AUTO-SESSION-LOG START -->"
+            echo "<!-- Auto-generated session summaries when manual Recent Sessions entries are skipped. -->"
+            echo "<!-- Most recent first. Max 20 entries. Cleaned up when manual entries cover the same work. -->"
+            echo ""
+            echo "$AUTO_ENTRY"
+            # Re-add existing entries (drop oldest if over 20)
+            if [ -n "$EXISTING_ENTRIES" ]; then
+                echo "$EXISTING_ENTRIES" | head -19
+            fi
+            echo ""
+            echo "<!-- AUTO-SESSION-LOG END -->"
+            echo ""
+        } > "$TMPBLOCK"
+
+        # Insert before AUTO-CAPTURE START using awk
+        awk -v blockfile="$TMPBLOCK" \
+            '/<!-- AUTO-CAPTURE START -->/ { while ((getline line < blockfile) > 0) print line; close(blockfile) } { print }' \
+            "$BRIDGE_FILE" > "${BRIDGE_FILE}.tmp"
+        mv "${BRIDGE_FILE}.tmp" "$BRIDGE_FILE"
+
+        rm -f "$TMPBLOCK"
     fi
 fi
 

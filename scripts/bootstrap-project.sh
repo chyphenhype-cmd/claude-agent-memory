@@ -213,6 +213,9 @@ EVOLUTION
 fi
 
 # 9. Create .claude/settings.local.json with standard hooks if not present
+# WARNING: Do NOT add Stop hooks here — the global Stop hook in ~/.claude/settings.json
+# handles cross-project capture (session-history, auto-session-log, brain file commits).
+# Adding a project-level Stop hook OVERRIDES the global one (Claude Code doesn't chain them).
 SETTINGS_FILE="$PROJECT_DIR/.claude/settings.local.json"
 if [ ! -f "$SETTINGS_FILE" ]; then
     echo "Creating .claude/settings.local.json with standard hooks..."
